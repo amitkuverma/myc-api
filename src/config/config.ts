@@ -38,14 +38,14 @@ const config: Record<Env, {
   },
   production: {
     db: {
-      username: 'aipower',
-      password: 'Aipower*&5413',
-      database: 'ai_power_db',
-      host: '88.222.215.36',
+      username: 'mycinema',
+      password: 'Mycinema*&5413',
+      database: 'mycinema_db',
+      host: '93.127.194.110',
       dialect: 'mysql', 
     },
     corsOrigin: '*',
-    swaggerUrl: 'https://api.aimagicpower.com',
+    swaggerUrl: 'https://api.mycinema.com',
   },
 };
 
