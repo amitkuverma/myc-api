@@ -28,7 +28,7 @@ const config: Record<Env, {
   development: {
     db: {
       username: getEnvVar('DB_USER'),   
-      password: '',
+      password: getEnvVar('DB_PASSWORD'),
       database: getEnvVar('DB_NAME'),   
       host: getEnvVar('DB_HOST'),       
       dialect: getEnvVar('DB_DIALECT'), 
