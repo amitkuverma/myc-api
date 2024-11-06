@@ -27,19 +27,19 @@ const config: Record<Env, {
 }> = {
   development: {
     db: {
-      username: 'mycinema',
-      password: 'Mycinema*&5413',
-      database: 'mycinema_db',
-      host: '93.127.194.110',
-      dialect: 'mysql', 
+      username: getEnvVar('DB_USER'),   
+      password: '',
+      database: getEnvVar('DB_NAME'),   
+      host: getEnvVar('DB_HOST'),       
+      dialect: getEnvVar('DB_DIALECT'), 
     },
     corsOrigin: '*',
-    swaggerUrl: 'https://api.mycinemadigital.com',
+    swaggerUrl: getEnvVar('SWAGGER_URL'),
   },
   production: {
     db: {
       username: 'mycinema',
-      password: 'Mycinema*&5413',
+      password: 'Mycinema@5413',
       database: 'mycinema_db',
       host: '93.127.194.110',
       dialect: 'mysql', 
