@@ -66,47 +66,54 @@ app.put('/api/daily-earnings', async (req, res) => {
 
 async function updateAIEarningsForAllUsers() {
   try {
-    // Fetch all users from the Payment table
-    const existingUsers = await Payment.findAll();
+    const allUsers = await Transaction.findAll({
+      where: {
+        paymentType: 'trade',
+        status: 'completed'
+      }
+    });
 
-    for (const user of existingUsers) {
-      // Check if the user has a commission value
-      const commission = user.commission;
-      if (commission > 0 && user.selfInvestment > 0) {
-        console.log('Commission:', commission);
-        console.log('Self Investment:', user.selfInvestment);
+    for (const user of allUsers) {
+      if (user) {
+        const existingUser = await Payment.findOne({ where: { userId: user.userId } });
 
-        const newEarnWallet = user.earnWallet + user.selfInvestment * commission / 100;
-        const newAiEarnings = user.aiEarning + user.selfInvestment * commission / 100;
+        if (existingUser && existingUser.commission > 0 && existingUser.selfInvestment > 0) {
+          const { commission, selfInvestment, earnWallet, payId } = existingUser;
 
-        console.log('Updated earnWallet:', newEarnWallet);
+          const newEarnWallet = earnWallet + parseFloat(user.transactionId ?? '0');
+          const aiEarningValue = parseFloat(user.transactionId ?? '0');
+          const newAiEarnings = existingUser.aiEarning + aiEarningValue;
 
-        // Update the earnWallet field for each user
-        await Payment.update(
-          {
-            earnWallet: newEarnWallet,
-            aiEarning: newAiEarnings
-          },
-          { where: { payId: user.payId } }
-        );
+          console.log('Updated earnWallet:', newEarnWallet);
 
-        // Record the AI earning
-        await AiEarning.create({
-          userId: user.userId,
-          userName: user.userName,
-          receiverId: user.userId,
-          receiverName: user.userName,
-          aiEarning: user.selfInvestment * commission / 100,
-          status: 'paid'
-        });
+          // Update earnWallet and aiEarning for the user
+          await Payment.update(
+            {
+              earnWallet: newEarnWallet,
+              aiEarning: newAiEarnings
+            },
+            { where: { payId } }
+          );
 
-        console.log(`AI earnings for userId ${user.payId} updated.`);
+          // Record the AI earning
+          await AiEarning.create({
+            userId: user.userId,
+            userName: user.userName,
+            receiverId: user.userId,
+            receiverName: user.userName,
+            aiEarning: aiEarningValue,
+            status: 'paid'
+          });
+
+          console.log(`AI earnings for userId ${payId} updated.`);
+        }
       }
     }
   } catch (error) {
     console.error('Error updating AI earnings for all users:', error);
   }
 }
+
 
 // Adjusted autoCreateDailyEarnings function
 // Assuming Payment is a Sequelize model
@@ -116,7 +123,6 @@ async function updateDailyEarningsForAllUsers() {
     const allUsers = await Transaction.findAll({
       where: {
         paymentType: 'trade',
-        transactionId: { [Op.ne]: null },
         status: 'completed'
       }
     });
@@ -130,7 +136,7 @@ async function updateDailyEarningsForAllUsers() {
       console.log(removingSelectedUserReferrals);
 
       if (removingSelectedUserReferrals.length > 0) {
-        await processReferralEarnings(userReferrals, user);
+        await processReferralEarnings(removingSelectedUserReferrals, user);
       }
     }
   } catch (error) {
@@ -149,14 +155,16 @@ async function processReferralEarnings(referrals: any, selectedUser: any) {
 
     if (paymentDetails?.commission && paymentDetails.selfInvestment) {  // Proceed if payment details exist
       // Calculate additional earnings based on referral percentage
-      const additionalEarnings = (paymentDetails.aiEarning || 0) * (referralPercentage / 100);
+      const additionalEarnings = (selectedUser.transactionId || 0) * (referralPercentage / 100);
+      //const additionalEarnings = (paymentDetails.aiEarning || 0) * (referralPercentage / 100);
       const updatedEarnings = (paymentDetails.earnWallet || 0) + additionalEarnings;
+      const updatedDailyEarnings = (paymentDetails.dailyLevelEarning || 0) + additionalEarnings;
 
       // Update user's earnWallet and dailyEarning in the Payment table
       await Payment.update(
         {
           earnWallet: updatedEarnings,
-          dailyEarning: additionalEarnings
+          dailyLevelEarning: updatedDailyEarnings
         },
         { where: { payId: paymentDetails.payId } }
       );
@@ -166,7 +174,7 @@ async function processReferralEarnings(referrals: any, selectedUser: any) {
         userId: referral.userId,
         userName: referral.name,
         receiverId: selectedUser.userId,
-        receiverName: selectedUser.name,
+        receiverName: selectedUser.userName,
         dailyEarning: additionalEarnings,
         status: 'paid'
       });

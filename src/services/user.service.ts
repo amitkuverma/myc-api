@@ -14,15 +14,11 @@ interface UserRegistrationData {
 export default class UserService {
   // Fetch all users with specific fields
   static async getAllUsers() {
-    return await User.findAll({
-      attributes: ['userId', 'name', 'email', 'mobile', 'emailVerified', 'referralCode', 'createdAt', 'status', 'filepath', 'filename'],
-    });
+    return await User.findAll();
   }
 
   static async getUserById(userId: any) {
-    return await User.findByPk(userId, {
-      attributes: ['userId', 'name', 'email', 'mobile', 'emailVerified', 'referralCode', 'createdAt', 'status', 'filepath', 'filename'],
-    });
+    return await User.findByPk(userId);
   }
 
 
@@ -54,10 +50,10 @@ export default class UserService {
     return user;
   }
 
-  static async updateUser(userId: any, data: any) {   
-    return User.update(data, { where: { userId: userId } });
+  static async updateUser(data: any) {
+    return User.update(data, { where: { userId: data.userId } });
   }
-  
+
   // Create a user with optional referral handling
   static async createUser(data: UserRegistrationData) {
     return await this.registerUserWithReferral(data);

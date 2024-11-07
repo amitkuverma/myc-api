@@ -53,10 +53,8 @@ export default class UserController {
   }
   static async updateUser(req: Request, res: Response) {
     try {
-      const { userId } = req.params; // Get the userId from request params
-      const { status } = req.body; // Get the new status from request body
 
-      const updatedUser = await UserService.updateUser(userId, status);
+      const updatedUser = await UserService.updateUser(req.body);
       
       if (!updatedUser) {
         return res.status(404).json({ message: "User not found" });
