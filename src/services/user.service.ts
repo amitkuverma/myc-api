@@ -54,6 +54,22 @@ export default class UserService {
     return User.update(data, { where: { userId: data.userId } });
   }
 
+  static async updateUserCoinsByMobile(data: any) {
+    // Ensure `mobile` is being used to find the user
+    const user: any = await User.findOne({ where: { mobile: data.mobile } });
+    
+    if (!user) return null;  // Handle case where user is not found
+  
+    user.coins = data.coins;
+    await user.save();
+    return {
+      userId: user.userId,
+      name: user.name,
+      mobile: user.mobile,
+      coins: user.coins
+    };
+  }
+
   // Create a user with optional referral handling
   static async createUser(data: UserRegistrationData) {
     return await this.registerUserWithReferral(data);
@@ -106,8 +122,8 @@ export default class UserService {
       newIdNumber = lastIdNumber + 1;
     }
 
-    // Format the new `userId` with "AI" prefix and 4-digit zero padding
-    const userId = `AI${newIdNumber.toString().padStart(4, '0')}`;
+    // Format the new `userId` with "MYC" prefix and 4-digit zero padding
+    const userId = `MYC${newIdNumber.toString().padStart(4, '0')}`;
     console.log(`Generated userId for new user: ${userId}`);
 
     const newUser = await User.create({

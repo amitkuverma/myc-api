@@ -181,6 +181,58 @@ router.put('/user/:userId', UserController.updateUser);
 
 /**
  * @openapi
+ * /api/user/coins:
+ *   post:
+ *     summary: Update user coins
+ *     description: Updates a user's coins based on their mobile number.
+ *     tags: [Users]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - mobile
+ *               - coins
+ *             properties:
+ *               mobile:
+ *                 type: integer
+ *                 description: The user's mobile number.
+ *               coins:
+ *                 type: integer
+ *                 description: The number of coins to add to the user.
+ *     responses:
+ *       200:
+ *         description: User coins updated successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 id:
+ *                   type: integer
+ *                   description: The user's ID.
+ *                 name:
+ *                   type: string
+ *                   description: The user's name.
+ *                 mobile:
+ *                   type: integer
+ *                   description: The user's mobile number.
+ *                 coins:
+ *                   type: integer
+ *                   description: The updated coin balance.
+ *       400:
+ *         description: Bad request.
+ *       404:
+ *         description: User not found.
+ *       500:
+ *         description: Server error.
+ */
+router.post('/user/coins', UserController.updateCoinFromVideo);
+
+/**
+ * @openapi
  * /api/register/{referralCode}:
  *   post:
  *     summary: Register a new user

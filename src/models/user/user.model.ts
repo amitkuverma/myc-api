@@ -8,15 +8,12 @@ class User extends Model {
   public mobile!: string;
   public password!: string;
   public position!: string;
-  public totalDirect!: number;
-  public activeDirect!: number;
-  public totalTeam!: number;
-  public activeTeam!: number;
+  public coins!: number;
   public filename?: string;
   public filepath?: string;
   public mimetype?: string;
   public referralCode?: string;
-  public parentUserId?: string | null; // Change this to string
+  public parentUserId?: string | null;
   public otp?: string;
   public emailVerified!: boolean;
   public status!: string;
@@ -56,22 +53,7 @@ User.init(
       type: DataTypes.STRING,
       allowNull: true,
     },
-    totalDirect: {
-      type: DataTypes.INTEGER,
-      allowNull: true,
-      defaultValue: 0,
-    },
-    activeDirect: {
-      type: DataTypes.INTEGER,
-      allowNull: true,
-      defaultValue: 0,
-    },
-    totalTeam: {
-      type: DataTypes.INTEGER,
-      allowNull: true,
-      defaultValue: 0,
-    },
-    activeTeam: {
+    coins: {
       type: DataTypes.INTEGER,
       allowNull: true,
       defaultValue: 0,
@@ -97,7 +79,7 @@ User.init(
       allowNull: true,
     },
     parentUserId: {
-      type: DataTypes.STRING, // Change this to STRING to match userId
+      type: DataTypes.STRING,
       allowNull: true,
       references: {
         model: 'users',
@@ -127,12 +109,11 @@ User.init(
       defaultValue: DataTypes.NOW,
     },
     resetToken: {
-      type: DataTypes.DATE,
+      type: DataTypes.STRING,
       allowNull: true,
-      defaultValue: DataTypes.NOW,
     },
     resetTokenExpiry: {
-      type: DataTypes.STRING,
+      type: DataTypes.DATE,
       allowNull: true,
     },
     isAdmin: {
@@ -147,29 +128,28 @@ User.init(
     timestamps: true,
     hooks: {
       async beforeCreate(user) {
-        console.log('BeforeCreate Hook Triggered:', user);
-        try {
-          // Find the last user in the database based on userId
-          const lastUser = await User.findOne({
-            order: [['userId', 'DESC']],
-          });
+        if (!user.userId) {  // Only generate userId if it's undefined or empty
+          console.log('BeforeCreate Hook Triggered:', user);
+          try {
+            const lastUser = await User.findOne({
+              order: [['userId', 'DESC']],
+            });
 
-          let newIdNumber = 1; // Default to 1 if no users exist
-          if (lastUser && lastUser.userId) {
-            // Extract numeric part from the last user’s ID (e.g., "AI0001" -> 1)
-            const lastIdNumber = parseInt(lastUser.userId.slice(2), 10);
-            newIdNumber = lastIdNumber + 1;
+            let newIdNumber = 1;
+            if (lastUser && lastUser.userId) {
+              const lastIdNumber = parseInt(lastUser.userId.slice(2), 10);
+              newIdNumber = lastIdNumber + 1;
+            }
+
+            user.userId = `AI${newIdNumber.toString().padStart(4, '0')}`;
+            console.log(`Generated userId for new user: ${user.userId}`);
+          } catch (error) {
+            console.error("Error in beforeCreate hook:", error);
+            throw error;
           }
-
-          // Format the new `userId` with "AI" prefix and 4-digit zero padding
-          user.userId = `AI${newIdNumber.toString().padStart(4, '0')}`;
-          console.log(`Generated userId for new user: ${user.userId}`);
-        } catch (error) {
-          console.error("Error in beforeCreate hook:", error);
-          throw error; // Re-throw to prevent creation if there’s an error
         }
       },
-    }
+    },
   }
 );
 
