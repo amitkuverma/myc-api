@@ -9,11 +9,11 @@ import { hashPassword } from '../utils/authUtils';
 
 class AuthController {
   async login(req: Request, res: Response) {
-    const { userId, password } = req.body;
+    const { email, password } = req.body;
 
     try {
       // Check if user exists
-      const user: any = await User.findOne({ where: { userId } });
+      const user: any = await User.findOne({ where: { email } });
 
       if (!user) {
         return res.status(401).json({ message: 'Invalid userId or password' });

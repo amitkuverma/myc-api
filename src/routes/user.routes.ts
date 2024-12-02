@@ -193,12 +193,12 @@ router.put('/user/:userId', UserController.updateUser);
  *           schema:
  *             type: object
  *             required:
- *               - mobile
+ *               - email
  *               - coins
  *             properties:
- *               mobile:
- *                 type: integer
- *                 description: The user's mobile number.
+ *               email:
+ *                 type: string
+ *                 description: The user's email.
  *               coins:
  *                 type: integer
  *                 description: The number of coins to add to the user.
@@ -216,6 +216,9 @@ router.put('/user/:userId', UserController.updateUser);
  *                 name:
  *                   type: string
  *                   description: The user's name.
+ *                 email:
+ *                   type: string
+ *                   description: The user's mobile number.
  *                 mobile:
  *                   type: integer
  *                   description: The user's mobile number.

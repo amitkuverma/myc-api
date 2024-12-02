@@ -56,7 +56,7 @@ export default class UserService {
 
   static async updateUserCoinsByMobile(data: any) {
     // Ensure `mobile` is being used to find the user
-    const user: any = await User.findOne({ where: { mobile: data.mobile } });
+    const user: any = await User.findOne({ where: { email: data.email } });
     
     if (!user) return null;  // Handle case where user is not found
   
@@ -65,6 +65,7 @@ export default class UserService {
     return {
       userId: user.userId,
       name: user.name,
+      email: user.email,
       mobile: user.mobile,
       coins: user.coins
     };
@@ -101,43 +102,62 @@ export default class UserService {
   private static async registerUserWithReferral(data: UserRegistrationData) {
     const { name, email, mobile, password, referralCode } = data;
     const hashedPassword = await hashPassword(password);
-    let parentUserId: string | null = null; // Use string since userId is a string
-
+    let parentUserId: string | null = null;
+  
+    // Validate referral code and fetch parent userId
     if (referralCode) {
-      const referrer: any = await User.findOne({ where: { referralCode } });
+      const referrer = await User.findOne({ where: { referralCode } });
       if (referrer) {
-        parentUserId = referrer.userId; // Assuming userId is a string
+        parentUserId = referrer.userId;
+      } else {
+        console.log(`Referral code ${referralCode} not found. Proceeding without parent userId.`);
       }
     }
-
-    // Generate the userId here
-    const lastUser = await User.findOne({
-      order: [['userId', 'DESC']],
-    });
-
-    let newIdNumber = 1; // Default to 1 if no users exist
-    if (lastUser && lastUser.userId) {
-      // Extract numeric part from the last user’s ID (e.g., "AI0001" -> 1)
-      const lastIdNumber = parseInt(lastUser.userId.slice(2), 10);
-      newIdNumber = lastIdNumber + 1;
+  
+    // Fetch the last user and generate the new userId
+    let userId: string;
+    try {
+      const lastUser = await User.findOne({
+        order: [['userId', 'DESC']],
+      });
+  
+      let newIdNumber = 1; // Default to 1 if no users exist
+      if (lastUser && lastUser.userId && lastUser.userId.startsWith("MYC")) {
+        // Extract numeric part safely
+        const lastIdNumber = parseInt(lastUser.userId.slice(3), 10); // "MYC0001" -> 1
+        if (!isNaN(lastIdNumber)) {
+          newIdNumber = lastIdNumber + 1;
+        }
+      }
+  
+      // Format the new `userId` with "MYC" prefix and 4-digit zero padding
+      userId = `MYC${newIdNumber.toString().padStart(4, '0')}`;
+    } catch (error) {
+      console.error('Error while generating userId:', error);
+      throw new Error('Unable to generate a new userId.');
     }
-
-    // Format the new `userId` with "MYC" prefix and 4-digit zero padding
-    const userId = `MYC${newIdNumber.toString().padStart(4, '0')}`;
+  
     console.log(`Generated userId for new user: ${userId}`);
-
-    const newUser = await User.create({
-      userId, // Assign the generated userId here
-      name,
-      email,
-      mobile,
-      password: hashedPassword,
-      parentUserId,
-      referralCode: await this.generateUniqueReferralCode(),
-    });
-
-    return newUser;
+  
+    // Create a new user
+    try {
+      const newUser = await User.create({
+        userId,
+        name,
+        email,
+        mobile,
+        password: hashedPassword,
+        parentUserId,
+        referralCode: await this.generateUniqueReferralCode(),
+      });
+  
+      return newUser;
+    } catch (error) {
+      console.error('Error while creating new user:', error);
+      throw new Error('Unable to register the user.');
+    }
   }
+  
 
   static async deleteUser(id: any) {
     const coin = await User.findByPk(id);
