@@ -60,7 +60,7 @@ export default class UserService {
     
     if (!user) return null;  // Handle case where user is not found
   
-    user.coins = data.coins;
+    user.coins = user.coins + data.coins;
     await user.save();
     return {
       userId: user.userId,
